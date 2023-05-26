@@ -96,8 +96,6 @@ class LeadsController extends Controller
 
             mail($emailTo, $emailSubject, $emailBody);
 
-            $createdProspect['email_body'] = $emailBody;
-
             return response()->json($createdProspect);
         } else {
             return response()->json(['error' => 'Failed to create prospect'], 500);
