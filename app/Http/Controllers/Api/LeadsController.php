@@ -86,7 +86,7 @@ class LeadsController extends Controller
             $prospectEmail = $request->Email;
 
             // Send email
-            $emailTo = 'notification@mywebsite.com';
+            $emailTo = 'it@truewealth.com.au';
             $emailSubject = 'New Prospect Notification';
             $emailBody = "Below are details about new created prospect.<br><br>";
             $emailBody .= "ID: $prospectId<br>";
