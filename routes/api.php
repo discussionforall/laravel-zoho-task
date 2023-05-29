@@ -22,3 +22,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/prospects', [LeadsController::class, 'index']);
 Route::post('/prospects', [LeadsController::class, 'createProspect']);
+Route::post('/leads', [LeadsController::class, 'createLead']);

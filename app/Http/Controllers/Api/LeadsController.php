@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 class LeadsController extends Controller
 {
 
-    private $prospects = '';
+    private $tokens = '';
 
     function __construct()
     {
@@ -20,7 +20,7 @@ class LeadsController extends Controller
             'Content-Type' => 'application/json',
         ])->post($url);
 
-        $this->prospects = $response->json();
+        $this->tokens = $response->json();
     }
 
     public function index()
@@ -29,11 +29,11 @@ class LeadsController extends Controller
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-            'Authorization' => 'Zoho-oauthtoken ' . $this->prospects['access_token'],
+            'Authorization' => 'Zoho-oauthtoken ' . $this->tokens['access_token'],
         ])->get($url, [
             'sort_by' => 'Created_Time',
             'sort_order' => 'desc',
-            'fields' => 'Full_Name,Email',
+            'fields' => 'Name,Email',
             'per_page' => 5
         ]);
 
@@ -62,7 +62,7 @@ class LeadsController extends Controller
         $url = config('zoho.ZOHO_BASE_URL') . '/Prospects';
 
         $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $this->prospects['access_token'],
+            'Authorization' => 'Zoho-oauthtoken ' . $this->tokens['access_token'],
         ])->post($url, [
             'data' => [
                 [
@@ -82,7 +82,7 @@ class LeadsController extends Controller
 
         if (isset($createdProspect['data']) && $createdProspect['data'][0]['code'] == "SUCCESS") {
             $prospectId = $createdProspect['data'][0]['details']['id'];
-            $prospectName = $createdProspect['data'][0]['details']['Created_By']['name'];
+            $prospectName = $request->First_Name." ".$request->Name;
             $prospectEmail = $request->Email;
 
             // Send email
@@ -99,6 +99,43 @@ class LeadsController extends Controller
             return response()->json($createdProspect);
         } else {
             return response()->json(['error' => 'Failed to create prospect'], 500);
+        }
+    }
+
+    public function createLead(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'First_Name' => 'required|string',
+            'Last_Name' => 'required|string',
+            'Mobile' => 'required|regex:/^04\d{8}$/',
+            'Email' => 'required|email'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $url = config('zoho.ZOHO_BASE_URL') . '/Leads';
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Zoho-oauthtoken ' . $this->tokens['access_token'],
+        ])->post($url, [
+            'data' => [
+                [
+                    'First_Name' => $request->First_Name,
+                    'Last_Name' => $request->Last_Name,
+                    'Mobile' => $request->Mobile,
+                    'Email' => $request->Email
+                ]
+            ]
+        ]);
+
+        $createdLead = $response->json();
+
+        if (isset($createdLead['data']) && $createdLead['data'][0]['code'] == "SUCCESS") {
+            return response()->json($createdLead);
+        } else {
+            return response()->json(['error' => 'Failed to create lead'], 500);
         }
     }
 }
